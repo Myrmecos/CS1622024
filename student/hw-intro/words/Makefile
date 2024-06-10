@@ -26,7 +26,7 @@ executable:
 default: executable
 
 test: 
-	make executable;
+	@make -s executable
 	./words -f words1.txt
 
 
