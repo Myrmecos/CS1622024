@@ -46,6 +46,20 @@ WordCount *word_counts = NULL;
  */
 int num_words(FILE* infile) {
   int num_words = 0;
+  char c;
+  if (infile == NULL) {return 0;}
+  int state = 0;
+  do {
+    c = fgetc(infile);
+    if (isalpha(c)) {
+      if (state == 0) {
+        num_words += 1;
+        state = 1;
+      }
+    } else {
+      state = 0;
+    }
+  } while (!feof(infile));
 
   return num_words;
 }
@@ -61,7 +75,40 @@ int num_words(FILE* infile) {
  * 1 in the event of any errors (e.g. wclist or infile is NULL)
  * and 0 otherwise.
  */
-int count_words(WordCount **wclist, FILE *infile) {
+int count_words(WordCount **wclist, FILE *infile, int * total_words) { //added last arg total_words
+  int prevWordIsChar = 0;
+  if (wclist == NULL || infile == NULL) {
+    return 1;
+  }
+  char presentWord[MAX_WORD_LEN]; //beware it's not: char * presentWord
+  char c;
+  int ind = 0;
+  do {
+    if (feof(infile)) {
+      if (ind != 0) {
+        add_word(wclist, presentWord);
+        //printf("%d%s\n", ind, presentWord);//debugging
+        *total_words += 1;
+      }
+      break;
+    }
+    c = fgetc(infile);
+    if (isalpha(c)) {
+      presentWord[ind] = tolower(c);
+      ind ++;
+      prevWordIsChar = 1;
+    } else {
+      presentWord[ind] = '\0';
+      ind = 0; 
+      if (prevWordIsChar) {
+        add_word(wclist, presentWord);
+        //printf("%s\n", presentWord); //debug
+        *total_words += 1;
+      }
+      prevWordIsChar = 0;
+    }
+  } while (1);
+  //printf("The llist is NULL: %d\n", *wclist == NULL); //debugging
   return 0;
 }
 
@@ -70,10 +117,13 @@ int count_words(WordCount **wclist, FILE *infile) {
  * Useful function: strcmp().
  */
 static bool wordcount_less(const WordCount *wc1, const WordCount *wc2) {
-  return 0;
+  if (wc1 == NULL || wc2 == NULL) {
+    return -1;
+  }
+  return strcmp(wc1->word, wc2->word) < 0;
 }
 
-// In trying times, displays a helpful message.
+// In trying times,displays a helpful message.
 static int display_help(void) {
 	printf("Flags:\n"
 	    "--count (-c): Count the total amount of words in the file, or STDIN if a file is not specified. This is default behavior if no flag is specified.\n"
@@ -137,13 +187,20 @@ int main (int argc, char *argv[]) {
     // At least one file specified. Useful functions: fopen(), fclose().
     // The first file can be found at argv[optind]. The last file can be
     // found at argv[argc-1].
+    while (argc - optind >= 1) {
+      //printf("%s\n", argv[optind]); //debug
+      infile = fopen(argv[optind], "r");
+      //printf("Number of words: %d\n", total_words); //debugging
+      count_words(&word_counts, infile, &total_words);
+      fclose(infile);
+      optind ++;
+    }
   }
 
   if (count_mode) {
     printf("The total number of words is: %i\n", total_words);
   } else {
     wordcount_sort(&word_counts, wordcount_less);
-
     printf("The frequencies of each word are: \n");
     fprint_words(word_counts, stdout);
 }

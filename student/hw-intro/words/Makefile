@@ -24,3 +24,10 @@ executable:
 	$(CC) $(CFLAGS) $(SOURCES) $(LIBRARIES) -o $(BINARIES)
 
 default: executable
+
+test: 
+	make executable;
+	./words -f words1.txt
+
+
+
