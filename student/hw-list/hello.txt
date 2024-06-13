@@ -1,0 +1,39 @@
+list.h, list.c: 
+    Pintos list, should not modify
+
+word_count.h: 
+    API to implement in word_count_t, should not modify
+
+words.o, word_count.o: 
+    produce words executable, for sanity check
+
+word_count_l.c: 
+    my implementation of word_count.h API
+    use **Pintos list** instead of linked list
+    Makefile provides macro def of Pintos_list
+    ##q: what is makefile macro? 
+    becomes lwords
+
+word_count_p.c:
+    my implementation of API in word_count.h
+    using Pintos list
+    word_count data structure
+    multithreaded prog.
+    need to write driver program
+
+word_helpers.h: 
+    API for parsing and counting words. 
+    compiled version of implementation: word_helpers.h
+
+pthread.c: 
+    implements example to create multiple threads
+    useful for reference when writing pwords.c
+
+##qustion: how to make txt shown as markdown in VMware? 
+
+
+
+
+
+
+
