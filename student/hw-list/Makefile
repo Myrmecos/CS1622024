@@ -44,3 +44,6 @@ clean:
 	rm -f $(EXECUTABLES) *.o
 	cp $${tmp_dir}/*.o ./
 	rm -r $$tmp_dir
+
+tpwords: pwords
+	./pwords e.txt f.txt
