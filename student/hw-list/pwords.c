@@ -33,6 +33,8 @@
 #include "word_helpers.h"
 #define SIZE_LIST 64
 
+
+pthread_mutex_t common_lock = PTHREAD_MUTEX_INITIALIZER;
 /*
  * main - handle command line, spawning one thread per file.
  */
@@ -44,9 +46,11 @@ typedef struct {
 
 void* thread_func(void* list_and_file) {
   list_and_file_t* laf = (list_and_file_t*) list_and_file;
-  fprintf(stdout, "processing file %s\n", laf->myfile);
+  //fprintf(stdout, "processing file %s\n", laf->myfile);
   FILE* myfile = fopen(laf->myfile, "r");
+  pthread_mutex_lock(&common_lock);
   count_words(laf->word_counts, myfile);
+  pthread_mutex_unlock(&common_lock);
   pthread_exit(NULL);
 }
 
@@ -88,7 +92,7 @@ int main(int argc, char* argv[]) {
   }
 
   /* Output final result of all threads' work. */
-  //wordcount_sort(&word_counts, less_count);
+  wordcount_sort(&word_counts, less_count);
   fprint_words(&word_counts, stdout);
   return 0;
 }

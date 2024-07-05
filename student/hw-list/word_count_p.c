@@ -60,7 +60,7 @@ word_count_t* find_word(word_count_list_t* wclist, char* word) {
 
 word_count_t* add_word(word_count_list_t* wclist, char* word) {
   /* TODO */
-  fprintf(stdout, "adding word %s\n", word);
+  //fprintf(stdout, "adding word %s\n", word);
   if (wclist == NULL) {
     return NULL;
   }
