@@ -158,7 +158,20 @@ int cmd_exec(struct tokens* tokens) {
       //get base pos
       base = start_point_arr[i] + 1;
 
+
+//========================Problem below
       //prepare stdin and stdout
+      if (i != 0) {
+        dup2(fds[i*2-2], STDIN_FILENO);
+      }
+      if (i != num_of_pipes) { // i != number of process - 1
+        dup2(fds[i*2+1], STDOUT_FILENO);
+      }
+      for (int j = 0; j < num_of_pipes*2; j++) {
+        close(fds[j]);
+      }
+
+//+++++++++++++++++Problem above
 
 
 
