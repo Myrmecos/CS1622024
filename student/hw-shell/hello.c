@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<unistd.h>
+#include<string.h>
 
 int main(int argc, char* argv[]) {
     //printf("hello there!\n");
@@ -9,8 +10,10 @@ int main(int argc, char* argv[]) {
     }
     
     char* buffer = malloc(sizeof(char) * 64);
-    scanf("%s", buffer);
-    printf("%s\n", buffer);
+    char* temp = malloc(sizeof(char) * 64);
+    fgets(temp, 64, stdin);
+    strcat(buffer, temp);
+    printf("%s", buffer);
     //int cnt = 3;
     /*while (scanf("%s", buffer) != EOF) {
         printf("%s\n", buffer);
