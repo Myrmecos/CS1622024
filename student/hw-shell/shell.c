@@ -87,7 +87,7 @@ int cmd_cd(struct tokens* tokens) {
 int search_for_first_occurrence(char* target_path) {
   char* env_var = getenv("PATH");
   char* path_left = malloc(sizeof(char) * 128);
-  printf("the environment variable: %s\n", env_var);
+  //printf("the environment variable: %s\n", env_var);
   char* path;
   for(path = strtok_r(env_var, ":", &path_left); path != NULL; path = strtok_r(NULL, ":", &path_left) ) {
     //printf("The parsed element is: %s\n", token);
@@ -129,16 +129,22 @@ int cmd_exec(struct tokens* tokens) {
       args[i] = tokens_get_token(tokens, i);
     }
     args[tokens_len] = NULL;
+
     //special case: redirection
-    if (strcmp(args[1], "<") == 0) {
-      freopen(args[2], "r", stdin);
-    } else if (strcmp(args[1], ">") == 0) {
-      freopen(args[2], "w", stdout);
+    //if (1 == 0) {
+    if (tokens_len >= 3) {
+      if (strcmp(args[1], "<") == 0) {
+        freopen(args[2], "r", stdin);
+      } else if (strcmp(args[1], ">") == 0) {
+        freopen(args[2], "w", stdout);
+      }
     }
-    if (strcmp(args[3], "<") == 0) {
-      freopen(args[4], "r", stdin);
-    } else if (strcmp(args[3], ">") == 0) {
-      freopen(args[4], "w", stdout);
+    if (tokens_len >= 5) {
+      if (strcmp(args[3], "<") == 0) {
+        freopen(args[4], "r", stdin);
+      } else if (strcmp(args[3], ">") == 0) {
+        freopen(args[4], "w", stdout);
+      }
     }
 
     //prepare full path
@@ -149,7 +155,7 @@ int cmd_exec(struct tokens* tokens) {
     }
 
     //execute
-    printf("The executable file: %s\n", path_name); //debugging
+    //printf("The executable file: %s\n", path_name); //debugging
     execv(path_name, args);
 
     //free argument array
