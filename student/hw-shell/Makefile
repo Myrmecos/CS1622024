@@ -16,3 +16,12 @@ $(EXECUTABLES): $(OBJS)
 
 clean:
 	rm -rf $(EXECUTABLES) $(OBJS)
+	rm -f hello
+
+test:
+	make hello
+	make 
+	
+
+hello: hello.c
+	$(CC) $(CFLAGS) $^ -o $@
