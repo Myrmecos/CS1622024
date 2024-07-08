@@ -116,61 +116,103 @@ int search_for_first_occurrence(char* target_path) {
 }
 
 int cmd_exec(struct tokens* tokens) {
-  pid_t thispid = fork();
-  if (thispid == 0) {
-    //child
 
-    //execl(tokens_get_token(tokens, 0), tokens_get_token(tokens, 0), NULL);
-    //prepare argument array
-    int tokens_len = tokens_get_length(tokens);
-    char** args = malloc(sizeof(char*) * (tokens_len + 1));
-    //printf("There are %d tokens\n", tokens_len);
-    for (int i = 0; i < tokens_len; i++) {
-      args[i] = tokens_get_token(tokens, i);
+  //prepare argument array
+  int tokens_len = tokens_get_length(tokens);
+  char** args = malloc(sizeof(char*) * (tokens_len + 1));
+  //printf("There are %d tokens\n", tokens_len);
+  int num_of_pipes = 0;
+
+  for (int i = 0; i < tokens_len; i++) {
+    args[i] = tokens_get_token(tokens, i);
+    if (strcmp(args[i], "|") == 0) {
+      num_of_pipes += 1;
     }
-    args[tokens_len] = NULL;
+  }
 
-    //special cases: redirection
-    //if (1 == 0) {
-    if (tokens_len >= 3) { //avoid segfault
-      if (strcmp(args[1], "<") == 0) {
-        freopen(args[2], "r", stdin);
-      } else if (strcmp(args[1], ">") == 0) {
-        freopen(args[2], "w", stdout);
+  //obtain an array of pipe positions
+  int* start_point_arr = malloc(sizeof(int) * (num_of_pipes + 2));
+  start_point_arr[0] = -1;
+  start_point_arr[num_of_pipes + 1] = tokens_len;
+  int cnt = 1;
+  for (int i = 0; i < tokens_len; i++) {
+    if(strcmp(args[i], "|") == 0) {
+      start_point_arr[cnt] = i;
+      cnt ++;
+    }
+  }
+  args[tokens_len] = NULL;
+
+  //prepare pipes
+  int* fds = malloc(sizeof(int) * num_of_pipes * 2);
+  int* pipe_arr = malloc(sizeof(int) * num_of_pipes);
+  for (int i = 0; i < num_of_pipes; i++) {
+    pipe_arr[i] = pipe(&(fds[i*2]));
+  }
+
+  int base = 0;
+  for (int i = 0; i < num_of_pipes + 1; i++) {
+    pid_t thispid = fork();
+    if (thispid == 0) {
+      //child
+      //get base pos
+      base = start_point_arr[i] + 1;
+
+      //prepare stdin and stdout
+
+
+
+      //special cases: redirection
+      //if (1 == 0) {
+      if (tokens_len - base >= 3) { //avoid segfault
+        if (strcmp(args[base + 1], "<") == 0) {
+          freopen(args[base + 2], "r", stdin);
+        } else if (strcmp(args[base + 1], ">") == 0) {
+          freopen(args[base + 2], "w", stdout);
+        }
       }
-    }
-    if (tokens_len >= 5) { //avoid segfault
-      if (strcmp(args[3], "<") == 0) {
-        freopen(args[4], "r", stdin);
-      } else if (strcmp(args[3], ">") == 0) {
-        freopen(args[4], "w", stdout);
+      if (tokens_len - base >= 5) { //avoid segfault
+        if (strcmp(args[base + 3], "<") == 0) {
+          freopen(args[base + 4], "r", stdin);
+        } else if (strcmp(args[base + 3], ">") == 0) {
+          freopen(args[base + 4], "w", stdout);
+        }
       }
+
+      //prepare args
+      int argnum = (start_point_arr[i + 1] - start_point_arr[i] - 1 + 1);
+      char** newarg = malloc(sizeof(char*) * argnum);
+      for (int k = 0; k < argnum - 1; k++) {
+          newarg[k] = args[base + k];
+      }
+      newarg[argnum - 1] = NULL;
+
+      //prepare full path
+      char* path_name = malloc(sizeof(char)*128);
+      strcpy(path_name, args[0 + base]);
+      if (path_name[0] != '/') {
+        search_for_first_occurrence(path_name);
+      }
+
+      //execute
+      //printf("The executable file: %s\n", path_name); //debugging
+      execv(path_name, newarg);
+
+      //free argument array
+      free(args);
+      fclose(stdin);
+      fclose(stdout);
+
+      //exit
+      exit(0);
+
+    } else if (thispid > 0) {
+      //parent wait for the execution to end
+      wait(NULL);
+    } else {
+      exit(-1);
     }
 
-    //prepare full path
-    char* path_name = malloc(sizeof(char)*128);
-    strcpy(path_name, args[0]);
-    if (path_name[0] != '/') {
-      search_for_first_occurrence(path_name);
-    }
-
-    //execute
-    //printf("The executable file: %s\n", path_name); //debugging
-    execv(path_name, args);
-
-    //free argument array
-    free(args);
-    fclose(stdin);
-    fclose(stdout);
-
-    //exit
-    exit(0);
-
-  } else if (thispid > 0) {
-    //parent wait for the execution to end
-    wait(NULL);
-  } else {
-    exit(-1);
   }
   return 1;
 }
