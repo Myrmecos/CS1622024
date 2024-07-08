@@ -130,16 +130,16 @@ int cmd_exec(struct tokens* tokens) {
     }
     args[tokens_len] = NULL;
 
-    //special case: redirection
+    //special cases: redirection
     //if (1 == 0) {
-    if (tokens_len >= 3) {
+    if (tokens_len >= 3) { //avoid segfault
       if (strcmp(args[1], "<") == 0) {
         freopen(args[2], "r", stdin);
       } else if (strcmp(args[1], ">") == 0) {
         freopen(args[2], "w", stdout);
       }
     }
-    if (tokens_len >= 5) {
+    if (tokens_len >= 5) { //avoid segfault
       if (strcmp(args[3], "<") == 0) {
         freopen(args[4], "r", stdin);
       } else if (strcmp(args[3], ">") == 0) {
