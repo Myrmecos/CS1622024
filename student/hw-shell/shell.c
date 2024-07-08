@@ -93,35 +93,22 @@ int search_for_first_occurrence(char* target_path) {
     //printf("The parsed element is: %s\n", token);
     //determine if the executable is in the dir
     //if yes, complete target_path and return 1
-    /*
-    struct dirent *entry;
-    DIR *dir = opendir(path);
-    if (dir == NULL) {
-        return;
-    }
-
+    struct dirent* entry;
+    DIR* dir = opendir(path);
+    if (dir == NULL) {return -1;}
     while ((entry = readdir(dir)) != NULL) {
-        printf("%s\n",entry->d_name);
-    }
-
-    closedir(dir);
-    */
-   struct dirent* entry;
-   DIR* dir = opendir(path);
-   if (dir == NULL) {return -1;}
-   while ((entry = readdir(dir)) != NULL) {
-     if (strcmp(entry->d_name, target_path) == 0) {
-       //printf("%s\n", token);
-       char* temp = malloc(sizeof(char) * 128);
-       strcpy(temp, path);
-       strcat(temp, "/");
-       strcat(temp, target_path);
-       strcpy(target_path, temp);
-       free(temp);
-       closedir(dir);
-       //printf("%s\n", target_path);
-       return 1;
-     }
+      if (strcmp(entry->d_name, target_path) == 0) {
+        //printf("%s\n", token);
+        char* temp = malloc(sizeof(char) * 128);
+        strcpy(temp, path);
+        strcat(temp, "/");
+        strcat(temp, target_path);
+        strcpy(target_path, temp);
+        free(temp);
+        closedir(dir);
+        //printf("%s\n", target_path);
+        return 1;
+      }
    }
    closedir(dir);
   }
@@ -132,6 +119,7 @@ int cmd_exec(struct tokens* tokens) {
   pid_t thispid = fork();
   if (thispid == 0) {
     //child
+
     //execl(tokens_get_token(tokens, 0), tokens_get_token(tokens, 0), NULL);
     //prepare argument array
     int tokens_len = tokens_get_length(tokens);
@@ -141,22 +129,37 @@ int cmd_exec(struct tokens* tokens) {
       args[i] = tokens_get_token(tokens, i);
     }
     args[tokens_len] = NULL;
+    //special case: redirection
+    if (strcmp(args[1], "<") == 0) {
+      freopen(args[2], "r", stdin);
+    } else if (strcmp(args[1], ">") == 0) {
+      freopen(args[2], "w", stdout);
+    }
+
     //prepare full path
     char* path_name = malloc(sizeof(char)*128);
     strcpy(path_name, args[0]);
     if (path_name[0] != '/') {
       search_for_first_occurrence(path_name);
     }
+
     //execute
     printf("The executable file: %s\n", path_name); //debugging
     execv(path_name, args);
+
     //free argument array
     free(args);
+    fclose(stdin);
+    fclose(stdout);
+
     //exit
     exit(0);
-  } else {
+
+  } else if (thispid > 0) {
     //parent wait for the execution to end
     wait(NULL);
+  } else {
+    exit(-1);
   }
   return 1;
 }

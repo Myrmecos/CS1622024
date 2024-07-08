@@ -1,0 +1,7 @@
+hello there!
+The 0th argument: hello
+The 1th argument: >
+The 2th argument: dah.txt
+hi
+hi
+dah
