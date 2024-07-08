@@ -11,6 +11,8 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <dirent.h>
+
 #include "tokenizer.h"
 
 /* Convenience macro to silence compiler warnings about unused function parameters. */
@@ -82,6 +84,50 @@ int cmd_cd(struct tokens* tokens) {
   return 1;
 }
 
+int search_for_first_occurrence(char* target_path) {
+  char* env_var = getenv("PATH");
+  char* path_left = malloc(sizeof(char) * 128);
+  printf("the environment variable: %s\n", env_var);
+  char* path;
+  for(path = strtok_r(env_var, ":", &path_left); path != NULL; path = strtok_r(NULL, ":", &path_left) ) {
+    //printf("The parsed element is: %s\n", token);
+    //determine if the executable is in the dir
+    //if yes, complete target_path and return 1
+    /*
+    struct dirent *entry;
+    DIR *dir = opendir(path);
+    if (dir == NULL) {
+        return;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        printf("%s\n",entry->d_name);
+    }
+
+    closedir(dir);
+    */
+   struct dirent* entry;
+   DIR* dir = opendir(path);
+   if (dir == NULL) {return -1;}
+   while ((entry = readdir(dir)) != NULL) {
+     if (strcmp(entry->d_name, target_path) == 0) {
+       //printf("%s\n", token);
+       char* temp = malloc(sizeof(char) * 128);
+       strcpy(temp, path);
+       strcat(temp, "/");
+       strcat(temp, target_path);
+       strcpy(target_path, temp);
+       free(temp);
+       closedir(dir);
+       //printf("%s\n", target_path);
+       return 1;
+     }
+   }
+   closedir(dir);
+  }
+  return -1;
+}
+
 int cmd_exec(struct tokens* tokens) {
   pid_t thispid = fork();
   if (thispid == 0) {
@@ -95,8 +141,15 @@ int cmd_exec(struct tokens* tokens) {
       args[i] = tokens_get_token(tokens, i);
     }
     args[tokens_len] = NULL;
+    //prepare full path
+    char* path_name = malloc(sizeof(char)*128);
+    strcpy(path_name, args[0]);
+    if (path_name[0] != '/') {
+      search_for_first_occurrence(path_name);
+    }
     //execute
-    execv(args[0], args);
+    printf("The executable file: %s\n", path_name); //debugging
+    execv(path_name, args);
     //free argument array
     free(args);
     //exit
