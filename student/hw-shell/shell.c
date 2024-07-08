@@ -135,6 +135,11 @@ int cmd_exec(struct tokens* tokens) {
     } else if (strcmp(args[1], ">") == 0) {
       freopen(args[2], "w", stdout);
     }
+    if (strcmp(args[3], "<") == 0) {
+      freopen(args[4], "r", stdin);
+    } else if (strcmp(args[3], ">") == 0) {
+      freopen(args[4], "w", stdout);
+    }
 
     //prepare full path
     char* path_name = malloc(sizeof(char)*128);

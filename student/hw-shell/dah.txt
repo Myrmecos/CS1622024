@@ -1,7 +1,9 @@
 hello there!
 The 0th argument: hello
-The 1th argument: >
-The 2th argument: dah.txt
+The 1th argument: <
+The 2th argument: eg.txt
+The 3th argument: >
+The 4th argument: dah.txt
 hi
-hi
+hello
 dah
