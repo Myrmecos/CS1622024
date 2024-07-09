@@ -286,13 +286,35 @@ int main(unused int argc, unused char* argv[]) {
     /* Find which built-in function to run. */
     int fundex = lookup(tokens_get_token(tokens, 0));
 
+    //set current process to foreground
+    pid_t current_pgid = getpgrp();
+    if (tcsetpgrp(STDIN_FILENO, current_pgid) == -1) {
+      perror("tcsetpgrp");
+      return 1;
+    }//no reasons why put it here. It stalls the program if placed in child process below.
+
     if (fundex >= 0) {
       cmd_table[fundex].fun(tokens);
     } else {
       /* REPLACE this to run commands as programs. */
       //fprintf(stdout, "This shell doesn't know how to run programs.\n");
-      cmd_exec(tokens);
+      pid_t cpid = fork();
+      if (cpid == 0) {
+        setpgrp();
+
+        //execute command
+        cmd_exec(tokens);
+        exit(0); //don't forget to exit!
+      } else if (cpid > 0) {
+        setpgid(cpid, cpid);
+        wait(NULL);
+      } else if (cpid < 0) {
+        perror("fork");
+        exit(1);
+      }
+        
     }
+    
 
     if (shell_is_interactive)
       /* Please only print shell prompts when standard input is not a tty */
