@@ -269,11 +269,30 @@ void init_shell() {
   }
 }
 
+void signal_callback_handler(int signum) {
+  printf("received SIGINT\n");
+}
+
 int main(unused int argc, unused char* argv[]) {
   init_shell();
 
   static char line[4096];
   int line_num = 0;
+
+  //set current process to foreground
+  pid_t current_pgid = getpgrp();
+    if (tcsetpgrp(STDIN_FILENO, current_pgid) == -1) {
+      perror("tcsetpgrp");
+      return 1;
+  }//no reasons why put it here. It stalls the program if placed in child process below.
+
+
+  /*wait for signal*/
+  struct sigaction sa;
+  sa.sa_flags = 0;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_handler = SIG_IGN;
+  sigaction(SIGINT, &sa, NULL);
 
   /* Please only print shell prompts when standard input is not a tty */
   if (shell_is_interactive)
@@ -286,13 +305,6 @@ int main(unused int argc, unused char* argv[]) {
     /* Find which built-in function to run. */
     int fundex = lookup(tokens_get_token(tokens, 0));
 
-    //set current process to foreground
-    pid_t current_pgid = getpgrp();
-    if (tcsetpgrp(STDIN_FILENO, current_pgid) == -1) {
-      perror("tcsetpgrp");
-      return 1;
-    }//no reasons why put it here. It stalls the program if placed in child process below.
-
     if (fundex >= 0) {
       cmd_table[fundex].fun(tokens);
     } else {
@@ -300,14 +312,31 @@ int main(unused int argc, unused char* argv[]) {
       //fprintf(stdout, "This shell doesn't know how to run programs.\n");
       pid_t cpid = fork();
       if (cpid == 0) {
-        setpgrp();
-
+        //printf("child's pid: %d; group pid: %d\n", getpid(), getpgrp());
+        //printf("child: original gpid: %d\n", getpgrp());
+        setpgrp();//testing
+        //printf("child: changed gpid: %d\n", getpgrp());
+        
         //execute command
         cmd_exec(tokens);
+        
         exit(0); //don't forget to exit!
       } else if (cpid > 0) {
-        setpgid(cpid, cpid);
+        /*printf("parent's pid: %d; group pid: %d\n", getpid(), getpgrp());
+        printf("parent: child's original gpid: %d\n", getpgid(cpid));*/
+        
+        //set signal handler to not ignore
+        sa.sa_handler = signal_callback_handler;
+        sigaction(SIGINT, &sa, NULL);
+
+        setpgid(cpid, cpid);//testing
+        //printf("parent: child's new gpid: %d\n", getpgid(cpid)); 
         wait(NULL);
+
+        //restore signal handler to ignore
+        sa.sa_handler = SIG_IGN;
+        sigaction(SIGINT, &sa, NULL);
+
       } else if (cpid < 0) {
         perror("fork");
         exit(1);

@@ -3,31 +3,73 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <errno.h>
+
+void signal_handler(int signum) {
+    // Handle the signal here
+    printf("Received signal %d\n", signum);
+}
 
 int main() {
-    pid_t pid = fork();
-    if (pid == 0) {
-        pid_t current_pid = getpid();
-        pid_t current_pgid = getpgrp();
+    pid_t child_pid;
+    pid_t fg_pgrp;
 
-        printf("Current PID: %d\n", current_pid);
-        printf("Current PGID: %d\n", current_pgid);
+    // Fork a new child process
+    child_pid = fork();
 
-        // Move the current process group to the foreground
-        if (tcsetpgrp(STDIN_FILENO, current_pgid) == -1) {
-            perror("tcsetpgrp");
+    if (child_pid == -1) {
+        // Fork failed
+        perror("fork");
+        return 1;
+    } else if (child_pid == 0) {
+        // Child process
+        printf("Child process, my PID is %d\n", getpid());
+
+        // Change the child's process group to its own PID
+        if (setpgid(0, 0) == -1) {
+            perror("setpgid");
             return 1;
         }
 
-        printf("Process group moved to foreground.\n");
+        // Get the current foreground process group
+        fg_pgrp = tcgetpgrp(STDIN_FILENO);
+        if (fg_pgrp == -1) {
+            perror("tcgetpgrp");
+            return 1;
+        }
 
-        // Wait for the user to press Ctrl+C to exit
+        // Set the child process to the foreground process group
+        printf("before changed to fg\n");
+        if (tcsetpgrp(STDIN_FILENO, getpid()) == -1) {
+            perror("tcsetpgrp");
+            return 1;
+        }
+        printf("changed to fg\n");
+
+        // Set up a signal handler for SIGINT (Ctrl+C)
+        struct sigaction sa;
+        sa.sa_handler = signal_handler;
+        sigemptyset(&sa.sa_mask);
+        sa.sa_flags = 0;
+        if (sigaction(SIGINT, &sa, NULL) == -1) {
+            perror("sigaction");
+            return 1;
+        }
+
+        // Wait for user input or other work
         while (1) {
             pause();
         }
-    }
-    if (pid > 0) {
-        wait(NULL);
+    } else {
+        // Parent process
+        printf("Parent process, my PID is %d, and the child's PID is %d\n", getpid(), child_pid);
+
+        // Wait for the child process to finish
+        int status;
+        if (waitpid(child_pid, &status, 0) == -1) {
+            perror("waitpid");
+            return 1;
+        }
     }
 
     return 0;
