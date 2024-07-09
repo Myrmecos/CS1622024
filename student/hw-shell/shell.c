@@ -151,15 +151,16 @@ int cmd_exec(struct tokens* tokens) {
   }
 
   int base = 0;
+  pid_t* pids = malloc(sizeof(pid_t) * (num_of_pipes + 1));
   for (int i = 0; i < num_of_pipes + 1; i++) {
-    pid_t thispid = fork();
-    if (thispid == 0) {
+    pids[i] = fork();
+    if (pids[i] == 0) {
       //child
+      //get child pid;
+      pids[i] = getpid();
       //get base pos
       base = start_point_arr[i] + 1;
 
-
-//========================Problem below
       //prepare stdin and stdout
       if (i != 0) {
         dup2(fds[i*2-2], STDIN_FILENO);
@@ -170,10 +171,6 @@ int cmd_exec(struct tokens* tokens) {
       for (int j = 0; j < num_of_pipes*2; j++) {
         close(fds[j]);
       }
-
-//+++++++++++++++++Problem above
-
-
 
       //special cases: redirection
       //if (1 == 0) {
@@ -213,20 +210,27 @@ int cmd_exec(struct tokens* tokens) {
 
       //free argument array
       free(args);
+      free(newarg);
       fclose(stdin);
       fclose(stdout);
 
       //exit
       exit(0);
 
-    } else if (thispid > 0) {
+    } else if (pids[i] > 0) {
       //parent wait for the execution to end
-      wait(NULL);
+      //wait(NULL);
     } else {
       exit(-1);
     }
-
   }
+
+  for (int j = 0; j < num_of_pipes*2; j++) { // close all read and write ends for main process
+    close(fds[j]);
+  }
+
+  while (wait(NULL) != -1); // wait till all processes to finish
+
   return 1;
 }
 
