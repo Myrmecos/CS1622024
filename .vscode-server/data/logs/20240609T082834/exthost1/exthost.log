@@ -1,0 +1,18 @@
+[2024-06-09 15:28:34.734] [exthost] [info] extension host started
+[2024-06-09 15:28:34.795] [exthost] [info] ExtensionService#_doActivateExtension vscode.debug-auto-launch {"startup":true,"extensionId":{"value":"vscode.debug-auto-launch","_lower":"vscode.debug-auto-launch"},"activationEvent":"*"}
+[2024-06-09 15:28:34.795] [exthost] [info] ExtensionService#loadCommonJSModule file:///home/workspace/.vscode-server/bin/c3f126316369cd610563c75b1b1725e0679adfb3/extensions/debug-auto-launch/dist/extension
+[2024-06-09 15:28:34.803] [exthost] [info] ExtensionService#_doActivateExtension vscode.git {"startup":true,"extensionId":{"value":"vscode.github","_lower":"vscode.github"},"activationEvent":"*"}
+[2024-06-09 15:28:34.803] [exthost] [info] ExtensionService#loadCommonJSModule file:///home/workspace/.vscode-server/bin/c3f126316369cd610563c75b1b1725e0679adfb3/extensions/git/dist/main
+[2024-06-09 15:28:34.894] [exthost] [info] ExtensionService#_doActivateExtension vscode.github {"startup":true,"extensionId":{"value":"vscode.github","_lower":"vscode.github"},"activationEvent":"*"}
+[2024-06-09 15:28:34.894] [exthost] [info] ExtensionService#loadCommonJSModule file:///home/workspace/.vscode-server/bin/c3f126316369cd610563c75b1b1725e0679adfb3/extensions/github/dist/extension.js
+[2024-06-09 15:28:34.941] [exthost] [info] ExtensionService#_doActivateExtension vscode.emmet {"startup":false,"extensionId":{"value":"vscode.emmet","_lower":"vscode.emmet"},"activationEvent":"onStartupFinished"}
+[2024-06-09 15:28:34.941] [exthost] [info] ExtensionService#loadCommonJSModule file:///home/workspace/.vscode-server/bin/c3f126316369cd610563c75b1b1725e0679adfb3/extensions/emmet/dist/node/emmetNodeMain
+[2024-06-09 15:28:34.951] [exthost] [info] ExtensionService#_doActivateExtension vscode.merge-conflict {"startup":false,"extensionId":{"value":"vscode.merge-conflict","_lower":"vscode.merge-conflict"},"activationEvent":"onStartupFinished"}
+[2024-06-09 15:28:34.951] [exthost] [info] ExtensionService#loadCommonJSModule file:///home/workspace/.vscode-server/bin/c3f126316369cd610563c75b1b1725e0679adfb3/extensions/merge-conflict/dist/mergeConflictMain
+[2024-06-09 15:28:34.955] [exthost] [info] ExtensionService#_doActivateExtension vscode.testing-editor-contributions {"startup":false,"extensionId":{"value":"vscode.testing-editor-contributions","_lower":"vscode.testing-editor-contributions"},"activationEvent":"onStartupFinished"}
+[2024-06-09 15:28:34.955] [exthost] [info] ExtensionService#loadCommonJSModule file:///home/workspace/.vscode-server/bin/c3f126316369cd610563c75b1b1725e0679adfb3/extensions/testing-editor-contributions/dist/extension.js
+[2024-06-09 15:28:34.956] [exthost] [info] eager extensions activated
+[2024-06-09 15:28:34.957] [exthost] [info] ExtensionService#_doActivateExtension ms-vscode.js-debug {"startup":false,"extensionId":{"value":"ms-vscode.js-debug","_lower":"ms-vscode.js-debug"},"activationEvent":"onCommand:extension.js-debug.clearAutoAttachVariables"}
+[2024-06-09 15:28:34.957] [exthost] [info] ExtensionService#loadCommonJSModule file:///home/workspace/.vscode-server/bin/c3f126316369cd610563c75b1b1725e0679adfb3/extensions/ms-vscode.js-debug/src/extension.js
+[2024-06-09 16:16:21.247] [exthost] [info] extension host terminating: received terminate message from renderer
+[2024-06-09 16:16:22.278] [exthost] [info] exiting with code 0
