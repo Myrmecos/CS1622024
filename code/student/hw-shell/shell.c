@@ -18,6 +18,9 @@
 /* Convenience macro to silence compiler warnings about unused function parameters. */
 #define unused __attribute__((unused))
 
+#define FOREGROUND_RUN 0
+#define BACKGROUND_RUN 1
+
 /* Whether the shell is connected to an actual terminal or not. */
 bool shell_is_interactive;
 
@@ -117,9 +120,18 @@ int search_for_first_occurrence(char* target_path) {
 
 int cmd_exec(struct tokens* tokens) {
 
+  int run_background = FOREGROUND_RUN;
+
   //prepare argument array
   int tokens_len = tokens_get_length(tokens);
   char** args = malloc(sizeof(char*) * (tokens_len + 1));
+
+  if (strcmp(tokens_get_token(tokens, tokens_len - 1), "&") == 0) {
+    //printf("run in background\n");
+    run_background = BACKGROUND_RUN;
+    tokens_len --;
+  }
+
   //printf("There are %d tokens\n", tokens_len);
   int num_of_pipes = 0;
 
@@ -229,7 +241,9 @@ int cmd_exec(struct tokens* tokens) {
     close(fds[j]);
   }
 
-  while (wait(NULL) != -1); // wait till all processes to finish
+  if (run_background == FOREGROUND_RUN) {
+    while (wait(NULL) != -1); // wait till all processes to finish
+  }
 
   return 1;
 }
