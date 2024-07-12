@@ -41,10 +41,35 @@ void serve_file(int fd, char* path) {
   /* PART 2 BEGIN */
 
   http_start_response(fd, 200);
+  //read my file at path
+  char buf[1024];
+  char int_str[32];
+  int in_file_des = open(path, O_RDONLY); //descriptor of the file to send
+  int cnt; //count number of bytes read
+
+  struct stat file_stat_buffer;
+  stat(path, &file_stat_buffer);
+  cnt = file_stat_buffer.st_size;
+
+  snprintf(int_str, 32, "%d", (int) cnt);
   http_send_header(fd, "Content-Type", http_get_mime_type(path));
-  http_send_header(fd, "Content-Length", "0"); // TODO: change this line too
+  http_send_header(fd, "Content-Length", int_str); // TODO: change this line too
   http_end_headers(fd);
 
+  ssize_t rd;
+  while (1) {
+    rd = read(in_file_des, buf, sizeof(buf));
+    if (rd == 0) {
+      break;
+    }
+    write(fd, buf, rd);
+    cnt += rd;
+  }
+  int err = close(in_file_des);
+  //writes to target descriptor
+  //ssize_t wr = write(fd, buf, rd);
+  //write(fd, "\n", rd);
+  
   /* PART 2 END */
 }
 
@@ -117,6 +142,16 @@ void handle_files_request(int fd) {
    */
 
   /* PART 2 & 3 BEGIN */
+  struct stat * requested_file_stat = malloc(sizeof(struct stat));
+  memset(requested_file_stat, 0, sizeof(struct stat));
+  int stat_result = stat(path, requested_file_stat);
+  if (stat_result == -1) {
+    http_start_response(fd, 404);
+    //exit(errno);
+  } else {
+    printf("file found!\n");
+  }
+  serve_file(fd, path);
 
   /* PART 2 & 3 END */
 
@@ -265,6 +300,8 @@ void serve_forever(int* socket_number, void (*request_handler)(int)) {
   if (bind(*socket_number, (struct sockaddr *) &server_address, sizeof(server_address)) == -1) {
     perror("bind");
     exit(EXIT_FAILURE);
+  } else {
+    printf("bind successfully. \n");
   }
 
   listen(*socket_number, 1024); //backlog is 1024
