@@ -48,7 +48,7 @@ void serve_file(int fd, char* path) {
   int cnt; //count number of bytes read
 
   struct stat file_stat_buffer;
-  stat(path, &file_stat_buffer);
+  stat(path, &file_stat_buffer); //IMP! use stat to get file size
   cnt = file_stat_buffer.st_size;
 
   snprintf(int_str, 32, "%d", (int) cnt);
@@ -66,10 +66,9 @@ void serve_file(int fd, char* path) {
     cnt += rd;
   }
   int err = close(in_file_des);
-  //writes to target descriptor
-  //ssize_t wr = write(fd, buf, rd);
-  //write(fd, "\n", rd);
-  
+  shutdown(fd, SHUT_WR);
+
+
   /* PART 2 END */
 }
 
@@ -148,10 +147,13 @@ void handle_files_request(int fd) {
   if (stat_result == -1) {
     http_start_response(fd, 404);
     //exit(errno);
-  } else {
+  } else if (S_ISREG(requested_file_stat->st_mode)) {
     printf("file found!\n");
+    serve_file(fd, path);
+  } else if (S_ISDIR(requested_file_stat->st_mode)) {
+    printf("dir found!\n");
+    serve_directory(fd, path);
   }
-  serve_file(fd, path);
 
   /* PART 2 & 3 END */
 

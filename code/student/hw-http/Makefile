@@ -17,3 +17,13 @@ poolserver: $(SOURCE)
 
 clean:
 	rm -f $(EXECUTABLES)
+
+test:
+	make clean
+	make
+	./httpserver --files www
+
+connect: 
+	curl -v http://0.0.0.0:8000/
+
+
