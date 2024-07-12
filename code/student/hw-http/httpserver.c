@@ -144,8 +144,8 @@ void handle_proxy_request(int fd) {
   * opens a connection to it. Please do not modify.
   */
   struct sockaddr_in target_address;
-  memset(&target_address, 0, sizeof(target_address));
-  target_address.sin_family = AF_INET;
+  memset(&target_address, 0, sizeof(target_address)); //set all contents in &target_address to 0
+  target_address.sin_family = AF_INET; 
   target_address.sin_port = htons(server_proxy_port);
 
   // Use DNS to resolve the proxy target's IP address
@@ -241,17 +241,16 @@ void serve_forever(int* socket_number, void (*request_handler)(int)) {
   }
 
   int socket_option = 1;
-  if (setsockopt(*socket_number, SOL_SOCKET, SO_REUSEADDR, &socket_option, sizeof(socket_option)) ==
-      -1) {
+  if (setsockopt(*socket_number, SOL_SOCKET, SO_REUSEADDR, &socket_option, sizeof(socket_option)) == -1) {
     perror("Failed to set socket options");
     exit(errno);
   }
 
   // Setup arguments for bind()
-  memset(&server_address, 0, sizeof(server_address));
-  server_address.sin_family = AF_INET;
+  memset(&server_address, 0, sizeof(server_address)); //set all contents &server_addr points to to 0
+  server_address.sin_family = AF_INET; //socket_internet family
   server_address.sin_addr.s_addr = INADDR_ANY;
-  server_address.sin_port = htons(server_port);
+  server_address.sin_port = htons(server_port); //server_port is a macro with value 8000
 
   /*
    * TODO: PART 1
@@ -263,6 +262,12 @@ void serve_forever(int* socket_number, void (*request_handler)(int)) {
    */
 
   /* PART 1 BEGIN */
+  if (bind(*socket_number, (struct sockaddr *) &server_address, sizeof(server_address)) == -1) {
+    perror("bind");
+    exit(EXIT_FAILURE);
+  }
+
+  listen(*socket_number, 1024); //backlog is 1024
 
   /* PART 1 END */
   printf("Listening on port %d...\n", server_port);

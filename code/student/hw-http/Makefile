@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g -ggdb3 -Wall -Werror -Wextra -std=gnu99
+CFLAGS=-g -ggdb3 -Wall -Wextra -std=gnu99 #deleted -Werror after -Wall
 LDFLAGS=-pthread
 EXECUTABLES=httpserver forkserver threadserver poolserver
 SOURCE=httpserver.c libhttp.c wq.c
