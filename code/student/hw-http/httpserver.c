@@ -81,12 +81,21 @@ void serve_directory(int fd, char* path) {
   /* PART 3 BEGIN */
 
   // TODO: Open the directory (Hint: opendir() may be useful here)
+  DIR* target_dir_ptr = opendir(path);
 
   /**
    * TODO: For each entry in the directory (Hint: look at the usage of readdir() ),
    * send a string containing a properly formatted HTML. (Hint: the http_format_href()
    * function in libhttp.c may be useful here)
    */
+
+  struct dirent* dir = readdir(target_dir_ptr);
+  char* buffer = malloc(sizeof(char) * 256);
+  while (dir != NULL) {
+    http_format_href(buffer, path, dir->d_name);
+    write(fd, buffer, strlen(buffer));
+    dir = readdir(target_dir_ptr);
+  }
 
   /* PART 3 END */
 }
@@ -152,7 +161,15 @@ void handle_files_request(int fd) {
     serve_file(fd, path);
   } else if (S_ISDIR(requested_file_stat->st_mode)) {
     printf("dir found!\n");
-    serve_directory(fd, path);
+    //make path to index.html
+    char buffer[256];
+    http_format_index(buffer, path);
+    //check if index.html exists
+    if (stat(buffer, requested_file_stat) != -1) { //contains the index.html file
+      serve_file(fd, buffer);
+    } else {
+      serve_directory(fd, path);
+    }
   }
 
   /* PART 2 & 3 END */
