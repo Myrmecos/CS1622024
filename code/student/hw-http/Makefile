@@ -33,7 +33,12 @@ t_test:
 	make 
 	./threadserver --proxy inst.eecs.berkeley.edu:81
 
+pool:
+	make clean
+	make
+	./poolserver --files www --num-threads 3
+
 connect: 
-	curl -v http://0.0.0.0:8000/
+	curl -v http://0.0.0.0:8000/hello.txt
 
 

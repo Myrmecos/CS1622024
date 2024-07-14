@@ -251,10 +251,11 @@ void handle_proxy_request(int fd) {
   /* PART 4 BEGIN */
   //create process
   pid_t pid = fork();
-  if (pid == 0) {
+  if (pid > 0) {
     //parent
-    //pass
-  } else if (pid > 0) {
+    wait(NULL);
+  } else if (pid == 0) {
+    //child
     //create thread
     pthread_t threads[2];
     two_sockets_t *ts1, *ts2;
@@ -267,6 +268,9 @@ void handle_proxy_request(int fd) {
     
     pthread_create(& threads[0], NULL, thread_func, (void*) ts1);
     pthread_create(& threads[1], NULL, thread_func, (void*) ts2);
+    free(ts1);
+    free(ts2);
+    exit(0);
     //read data from one socket and write to another socket
     //when one socket closes, close both sockets, exit both thread
   } else {
@@ -306,17 +310,34 @@ void* thread_func(void* ts_void) {
  * When the server accepts a new connection, a thread should be dispatched
  * to send a response to the client.
  */
+
+void* handle_clients(void*);
 void* handle_clients(void* void_request_handler) {
   void (*request_handler)(int) = (void (*)(int))void_request_handler;
   /* (Valgrind) Detach so thread frees its memory on completion, since we won't
    * be joining on it. */
-  pthread_detach(pthread_self());
+    
+    pthread_detach(pthread_self());
 
-  /* TODO: PART 7 */
-  /* PART 7 BEGIN */
+    /* TODO: PART 7 */
+    /* PART 7 BEGIN */
+    while (1) {
+    //pthread_mutex_lock(&(work_queue.mutex)); //lock
+    //while(work_queue.size == 0) { 
+      //pthread_cond_wait(&(work_queue.condvar), &(work_queue.mutex)); //if no jobs, sleep holding the lock
+    //}
+    //printf("found client request!\n");
+    int fd = wq_pop(&work_queue); //pull one fd off queue
+    //printf("got client request!\n");
+    //pthread_mutex_unlock(&(work_queue.mutex)); //unlock
+
+    request_handler(fd); //handle request
+    }
+  }
+  
 
   /* PART 7 END */
-}
+//deleted a curly bracket here
 
 /*
  * Creates `num_threads` amount of threads. Initializes the work queue.
@@ -325,6 +346,20 @@ void init_thread_pool(int num_threads, void (*request_handler)(int)) {
 
   /* TODO: PART 7 */
   /* PART 7 BEGIN */
+  //init work queue
+
+  wq_init(&work_queue);
+  //printf("initialized work queue\n");
+  //wq_push(&work_queue, 4);
+  //printf("pushed in something\n");
+
+  //create threads
+  pthread_t *threads = malloc(sizeof(threads) * num_threads);
+  for (int i = 0; i < num_threads; i++) {
+    pthread_create(&(threads[i]), NULL, handle_clients, (void*) request_handler);
+  }
+
+  //printf("Thread pool initiation done.\n");
 
   /* PART 7 END */
 }
@@ -473,6 +508,13 @@ void serve_forever(int* socket_number, void (*request_handler)(int)) {
      */
 
     /* PART 7 BEGIN */
+    //printf("if found here, you're right before obtaininig lock\n");
+    //pthread_mutex_lock(&(work_queue.mutex));
+    //printf("here's after obtaining lock. client socket number is: %d\n", client_socket_number);
+    wq_push(&work_queue, client_socket_number);
+    //printf("a new client. %d pushed into queue!\n", client_socket_number);
+    pthread_cond_signal(&(work_queue.condvar));
+    //pthread_mutex_unlock(&(work_queue.mutex));
 
     /* PART 7 END */
 #endif
