@@ -18,10 +18,15 @@ poolserver: $(SOURCE)
 clean:
 	rm -f $(EXECUTABLES)
 
-test:
+basic_test:
 	make clean
 	make
 	./httpserver --files www
+
+p_test: #proxy test #remember to do port forwarding (or tunneling): ssh -L 8000:127.0.0.1:8000 docker162, or replace docker162 with 127.0.0.1
+	make clean
+	make 
+	./httpserver --proxy inst.eecs.berkeley.edu:81
 
 connect: 
 	curl -v http://0.0.0.0:8000/

@@ -191,6 +191,14 @@ void handle_files_request(int fd) {
  *
  *   Closes client socket (fd) and proxy target fd (target_fd) when finished.
  */
+
+struct two_sockets {
+  int fd_in;
+  int fd_out;
+};
+
+typedef struct two_sockets two_sockets_t;
+void* thread_func(void*);
 void handle_proxy_request(int fd) {
 
   /*
@@ -241,8 +249,54 @@ void handle_proxy_request(int fd) {
 
   /* TODO: PART 4 */
   /* PART 4 BEGIN */
+  //create process
+  pid_t pid = fork();
+  if (pid == 0) {
+    //parent
+    //pass
+  } else if (pid > 0) {
+    //create thread
+    pthread_t threads[2];
+    two_sockets_t *ts1, *ts2;
+    ts1 = malloc(sizeof(two_sockets_t));
+    ts2 = malloc(sizeof(two_sockets_t));
+    ts1->fd_in = fd;
+    ts1->fd_out = target_fd;
+    ts2->fd_in = target_fd;
+    ts2->fd_out = fd;
+    
+    pthread_create(& threads[0], NULL, thread_func, (void*) ts1);
+    pthread_create(& threads[1], NULL, thread_func, (void*) ts2);
+    //read data from one socket and write to another socket
+    //when one socket closes, close both sockets, exit both thread
+  } else {
+    perror("failed to create new process for proxy handling\n");
+    exit(errno);
+  }
 
+  return;
   /* PART 4 END */
+}
+
+void* thread_func(void* ts_void) {
+  two_sockets_t *ts = (two_sockets_t *) ts_void;
+  char buffer[256];
+  int read_len = 0;
+  int write_len = 0;
+  do {
+    read_len = read(ts->fd_in, buffer, 256);
+    if (read_len < 0) { 
+      break;
+    }
+    write_len = write(ts->fd_out, buffer, read_len);
+    if (write_len < 0) {
+      break;
+    }
+  } while (1);
+
+  close(ts->fd_in);
+  close(ts->fd_out);
+  pthread_exit(NULL);
 }
 
 #ifdef POOLSERVER
@@ -372,6 +426,16 @@ void serve_forever(int* socket_number, void (*request_handler)(int)) {
 
     /* PART 5 BEGIN */
 
+    pid_t cpid = fork();
+    if (cpid == -1) {
+      perror("failed to create new process for forkserver\n");
+      exit(errno);
+    } else if (cpid > 0) {
+      //child
+      request_handler(client_socket_number);
+      exit(0); //debugging: should I exit here?
+    }
+
     /* PART 5 END */
 
 #elif THREADSERVER
@@ -386,6 +450,10 @@ void serve_forever(int* socket_number, void (*request_handler)(int)) {
      */
 
     /* PART 6 BEGIN */
+    pthread_t thread;
+    pthread_create(&thread, NULL, threadserver_thread_func, (void*) client_socket_number);
+    
+
 
     /* PART 6 END */
 #elif POOLSERVER
@@ -405,6 +473,12 @@ void serve_forever(int* socket_number, void (*request_handler)(int)) {
 
   shutdown(*socket_number, SHUT_RDWR);
   close(*socket_number);
+}
+
+void* threadserver_thread_func(void *my_arg) {
+  int client_socket_number = (int) my_arg;
+  request_handler(client_socket_number);
+  pthread_exit(NULL);
 }
 
 int server_fd;
