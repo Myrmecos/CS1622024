@@ -28,6 +28,11 @@ p_test: #proxy test #remember to do port forwarding (or tunneling): ssh -L 8000:
 	make 
 	./httpserver --proxy inst.eecs.berkeley.edu:81
 
+t_test:
+	make clean
+	make 
+	./threadserver --proxy inst.eecs.berkeley.edu:81
+
 connect: 
 	curl -v http://0.0.0.0:8000/
 

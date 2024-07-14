@@ -329,6 +329,12 @@ void init_thread_pool(int num_threads, void (*request_handler)(int)) {
   /* PART 7 END */
 }
 #endif
+struct func_and_arg_for_threadserver {
+  int my_arg;
+  void (*my_func)(int);
+};
+typedef struct func_and_arg_for_threadserver func_and_arg_for_threadserver_t;
+void* threadserver_thread_func(void *my_arg);
 
 /*
  * Opens a TCP stream socket on all interfaces with port number PORTNO. Saves
@@ -451,7 +457,8 @@ void serve_forever(int* socket_number, void (*request_handler)(int)) {
 
     /* PART 6 BEGIN */
     pthread_t thread;
-    pthread_create(&thread, NULL, threadserver_thread_func, (void*) client_socket_number);
+    func_and_arg_for_threadserver_t fat = {client_socket_number, request_handler};
+    pthread_create(&thread, NULL, threadserver_thread_func, (void*) &fat);
     
 
 
@@ -476,8 +483,11 @@ void serve_forever(int* socket_number, void (*request_handler)(int)) {
 }
 
 void* threadserver_thread_func(void *my_arg) {
-  int client_socket_number = (int) my_arg;
-  request_handler(client_socket_number);
+  func_and_arg_for_threadserver_t *fat = (func_and_arg_for_threadserver_t*) my_arg;
+  void(*request_handler)(int) = fat->my_func;
+  request_handler(fat->my_arg);
+  //fat->my_func(fat->my_arg);
+  //request_handler(client_socket_number);
   pthread_exit(NULL);
 }
 
